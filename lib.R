@@ -166,8 +166,28 @@ level_3_values_function <- function (
 
 # numeric_values_function 
 
-numeric_values_function <- function (  ) {
-  
-  
-  
+numeric_values_function <- function ( 
+    n, type, 
+    df = 4, 
+    min = 0, max = 1,
+    shape = 2, rate = 4,
+    multiplier = 1, round = 0
+) {
+    
+    temp_func <- function ( x ) {
+        round( x * multiplier, round )
+    }
+    
+    if ( type == "chi2" ) {
+        return( temp_func( rchisq( n, df ) ) )
+    }
+    
+    if ( type == "unif" ) {
+        return( temp_func( runif( n, min, max ) ) )
+    }
+    
+    if ( type == "gamma" ) {
+        return( temp_func( rgamma( n, shape, rate ) ) )
+    }
+    
 }
