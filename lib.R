@@ -8,7 +8,7 @@
 
 # Add in a default value for level 2+
 
-# calc_cumulative
+# calcCumulative
 
     # INPUTS
     #   df    - the odds table to calculate the cumulative values for
@@ -16,14 +16,12 @@
     # OUTPUT
     #   output - the transformed table
 
-calc_cumulative <- function( df ) {
+calcCumulative <- function( df ) {
     
     level <- df %>%
         select( starts_with( 'filter' ) ) %>% 
         dim %>%
         .[2]
-    
-    print( level ) 
     
     if ( level == 0 ) {
         
@@ -45,7 +43,7 @@ calc_cumulative <- function( df ) {
     
 }
 
-# level_1_values_function
+# level1Values
 
     # INPUTS
     #   tbl - this is a table containing the desired output values as well
@@ -55,7 +53,7 @@ calc_cumulative <- function( df ) {
     # OUTPUT
     #   output - this will be a vector
 
-level_1_values_function <- function ( tbl, n ) {
+level1Values <- function ( tbl, n ) {
   
     random_values <- runif( n )
 
@@ -70,7 +68,7 @@ level_1_values_function <- function ( tbl, n ) {
   
 }
 
-level_1_adj_values_function <- function ( 
+level1AdjValues <- function ( 
     org_values, filter_value, modification_tbl, n
 ) {
     
@@ -98,7 +96,7 @@ level_1_adj_values_function <- function (
     
 }
 
-# level_2_values_function
+# level2Values
 
     # INPUTS
     #   tbl - this is a table containing the desired output values as well
@@ -111,7 +109,7 @@ level_1_adj_values_function <- function (
     # OUTPUT
     #   output - outputs a vector of values
 
-level_2_values_function <- function ( 
+level2Values <- function ( 
     odds_tbl, filter_value, n, 
     default = "default", modification_tbl = data.frame() 
 ) {
@@ -153,7 +151,7 @@ level_2_values_function <- function (
   
 }
 
-# level_3_values_function
+# level3Values
 
     # INPUTS
     #   tbl - this is a table containing the desired output values as well
@@ -167,7 +165,7 @@ level_2_values_function <- function (
     # OUTPUT
     #   output - outputs a vector of values
 
-level_3_values_function <- function ( 
+level3Values <- function ( 
         tbl, filter_value_1, filter_value_2, n, 
         default = "default", modification_tbl = data.frame()
     ) {
@@ -199,7 +197,7 @@ level_3_values_function <- function (
   
 }
 
-# numeric_values
+# numericValues
 
     # INPUTS
     #   n           - the number of values to be generated
@@ -219,7 +217,7 @@ level_3_values_function <- function (
     # OUTPUT
     #   . - outputs a vector of values
 
-numeric_values <- function ( 
+numericValues <- function ( 
     n, type, 
     df = 4, 
     min = 0, max = 1,

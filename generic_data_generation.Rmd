@@ -42,42 +42,19 @@ Set any required variables and read in any tables that are required.
 ```{r read_in_odds_tables, echo=FALSE}
 # date related tables
 years_odds_tbl <- read_csv( 'data_in/years.csv' ) %>% 
-    mutate(
-        cumulative_odds = cumsum( odds )
-    )
+    calcCumulative
 months_odds_tbl <- read_csv( 'data_in/months.csv' ) %>% 
-    mutate(
-        cumulative_odds = cumsum( odds )
-    )
-year_month_override_odds_tbl <- read_csv( 
-        'data_in/year_month_override.csv' 
-    ) %>% 
-    group_by( filter_1 ) %>% 
-    mutate(
-    cumulative_odds = cumsum( odds )
-    ) %>% 
-    ungroup
+    calcCumulative
+year_month_adj_odds_tbl <- read_csv( 'data_in/year_month_override.csv' ) %>%
+    calcCumulative
 
 # policy type information
-policy_type_odds_tbl <- read_csv( 
-        'data_in/policy_type.csv' 
-    )
-policy_type_level_2_odds_tbl <- read_csv( 
-        'data_in/policy_type_level_2.csv' 
-    ) %>% 
-    group_by( filter_1 ) %>% 
-    mutate(
-        cumulative_sum = cumsum( odds )
-    ) %>% 
-    ungroup
-policy_type_level_3_odds_tbl <- read_csv( 
-        'data_in/policy_type_level_3.csv' 
-    ) %>% 
-    group_by( filter_1, filter_2 ) %>% 
-    mutate(
-        cumulative_odds = cumsum( odds )
-    ) %>% 
-    ungroup
+policy_type_odds_tbl <- read_csv( 'data_in/policy_type.csv' ) %>% 
+    calcCumulative
+policy_type_2_odds_tbl <- read_csv( 'data_in/policy_type_level_2.csv' ) %>% 
+    calcCumulative
+policy_type_3_odds_tbl <- read_csv( 'data_in/policy_type_level_3.csv' ) %>% 
+    calcCumulative
 ```
 
 ### Policies table
@@ -88,15 +65,15 @@ Start to build up the policies table.
 # start with the row count
 first_tbl <- 10000 %>% 
     # initially generate the first level policy type
-    level_1_values_function( policy_type_odds_tbl, . ) %>% 
+    level1Values( policy_type_odds_tbl, . ) %>% 
     # convert to a better data format
     data.frame( policy_type = . ) %>% 
     as_tibble %>% 
     # create the second level of policy type
     group_by( policy_type ) %>% 
     mutate(
-        policy_sub_type = level_2_values_function( 
-            policy_type_level_2_odds_tbl, 
+        policy_sub_type = level2Values( 
+            policy_type_2_odds_tbl, 
             filter_value = policy_type, 
             n = n() 
         )
@@ -104,8 +81,8 @@ first_tbl <- 10000 %>%
     # create the third level of policy type
     group_by( policy_type, policy_sub_type ) %>% 
     mutate(
-        policy_level_3 = level_3_values_function( 
-            policy_type_level_3_odds_tbl, 
+        policy_level_3 = level3Values( 
+            policy_type_3_odds_tbl, 
             filter_value_1 = policy_type, 
             filter_value_2 = policy_sub_type, 
             n = n(), 
@@ -121,21 +98,21 @@ Policy table starting with the dates of the policy start.
 ```{r}  
 # initialise the table with years
 first_tbl <- 10000 %>% 
-    level_1_values_function( years_odds_tbl, . ) %>% 
+    level1Values( years_odds_tbl, . ) %>% 
     # convert to a better data object
     data.frame( year = . ) %>% 
     as.tibble %>% 
     # set the months
     group_by( year ) %>% 
     mutate(
-        month = level_1_values_function( months_odds_tbl, n() ),
-        month = level_1_adj_values_function(
+        month = level1Values( months_odds_tbl, n() ),
+        month = level1AdjValues(
             month,
             year,
-            year_month_override_odds_tbl,
+            year_month_adj_odds_tbl,
             n()
         ),
-        policy_type = level_1_values_function( 
+        policy_type = level1Values( 
             policy_type_odds_tbl, 
             n() 
         )
@@ -166,16 +143,16 @@ first_tbl <- 10000 %>%
     # second level policy type
     group_by( policy_type ) %>% 
     mutate(
-        policy_type_level_2 = level_2_values_function(
-            policy_type_level_2_odds_tbl,
+        policy_type_level_2 = level2Values(
+            policy_type_2_odds_tbl,
             policy_type,
             n()
         )
     ) %>% 
     group_by( policy_type, policy_type_level_2 ) %>% 
     mutate(
-        policy_type_level_3 = level_3_values_function(
-            policy_type_level_3_odds_tbl,
+        policy_type_level_3 = level3Values(
+            policy_type_3_odds_tbl,
             policy_type,
             policy_type_level_2,
             n(),
@@ -184,7 +161,7 @@ first_tbl <- 10000 %>%
     ) %>% 
     ungroup %>% 
     mutate(
-        premium = numeric_values_function(
+        premium = numericValues(
             n(),
             type = "unif",
             min = 5,
@@ -192,9 +169,9 @@ first_tbl <- 10000 %>%
             multiplier = 20,
             round = 2
         ),
-        incidents = numeric_values_function(
+        incidents = numericValues(
             n(),
-            type = "chi2",
+            type = "chisq",
             df = 4,
             multiplier = 1/6
         )
