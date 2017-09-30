@@ -88,40 +88,6 @@ policy_type_3_odds_tbl <- read_csv(
 
 ### Policies table
 
-Start to build up the policies table. 
-
-```{r first_tbl}
-# start with the row count
-first_tbl <- 10000 %>% 
-    # initially generate the first level policy type
-    level1Values( policy_type_odds_tbl, . ) %>% 
-    # convert to a better data format
-    data.frame( policy_type = . ) %>% 
-    as_tibble %>% 
-    # create the second level of policy type
-    group_by( policy_type ) %>% 
-    mutate(
-        policy_sub_type = level2Values( 
-            policy_type_2_odds_tbl, 
-            filter_value = policy_type, 
-            n = n() 
-        )
-    ) %>% 
-    # create the third level of policy type
-    group_by( policy_type, policy_sub_type ) %>% 
-    mutate(
-        policy_level_3 = level3Values( 
-            policy_type_3_odds_tbl, 
-            filter_value_1 = policy_type, 
-            filter_value_2 = policy_sub_type, 
-            n = n(), 
-            default = "0" 
-        )
-    )
-
-glimpse( first_tbl )
-```
-
 Policy table starting with the dates of the policy start.
  
 ```{r}  
@@ -178,6 +144,7 @@ first_tbl <- 10000 %>%
             n()
         )
     ) %>% 
+    # Add in third level policy type and policy reference
     group_by( policy_type, policy_type_level_2 ) %>% 
     mutate(
         policy_type_level_3 = level3Values(
@@ -199,6 +166,7 @@ first_tbl <- 10000 %>%
             sample( 1:10, 1 )
         )
     ) %>% 
+    # Add in a premium amount and an incident count
     ungroup %>% 
     mutate(
         premium = numericValues(
@@ -215,7 +183,9 @@ first_tbl <- 10000 %>%
             df = 4,
             multiplier = 1/5
         )
-    )
+    ) %>% 
+    # Remove intermediate columns
+    select( -policy_code )
 
 glimpse( first_tbl )
 ```
@@ -223,10 +193,14 @@ glimpse( first_tbl )
 Create the incidents table.
 
 ```{r incidents-tbl}
+# Based off the incident counts create a base incidents table
 second_tbl <- first_tbl[ 
-        rep( rownames( first_tbl ) %>% as.integer, first_tbl$incidents ), 
-        
-    ] %>% 
+    rep( rownames( first_tbl ) %>% as.integer, first_tbl$incidents ), 
+    
+] %>% 
+    # Remove intermediate columns
     select( -incidents )
+
+glimpse( second_tbl )
 ```
 
