@@ -121,18 +121,12 @@ level2Values <- function (
 
     if ( nrow( tbl ) == 0 ) {
         
-        print( "Here filtering" )
-        
         tbl <- odds_tbl %>% 
             filter( filter_1 == filter_value[1] )
         
     }
-    
-    print( tbl )
   
     if ( nrow( tbl ) == 0 ) {
-        
-        print( "Here default" )
         
         output <- replicate( n, default )
         
