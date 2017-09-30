@@ -186,6 +186,17 @@ first_tbl <- 10000 %>%
             policy_type_level_2,
             n(),
             default = "0"
+        ),
+        policy_code = plyr::mapvalues( 
+            policy_type_level_3,
+            from = c( policy_type_3_odds_tbl$out_value, "0" ),
+            to = c( policy_type_3_odds_tbl$code, "ZZ" )
+        ),
+        policy_ref = paste0( 
+            policy_code, 
+            str_pad( row_number( year ), 6, "left", "0" ),
+            sample( LETTERS, 1 ),
+            sample( 1:10, 1 )
         )
     ) %>% 
     ungroup %>% 
@@ -202,9 +213,11 @@ first_tbl <- 10000 %>%
             n(),
             type = "chisq",
             df = 4,
-            multiplier = 1/6
+            multiplier = 1/5
         )
     )
+
+glimpse( first_tbl )
 ```
 
 Create the incidents table.
