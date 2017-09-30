@@ -39,21 +39,50 @@ By using a set of generic functions hopefully it can be relatively easy to build
 
 Set any required variables and read in any tables that are required.
 
-```{r read_in_odds_tables, echo=FALSE}
+```{r set_tbl_options}
+# Define basic column data types
+col_types = cols(
+    out_value = col_character(),
+    odds = col_double()
+)
+```
+```{r read_in_tbls}
 # date related tables
-years_odds_tbl <- read_csv( 'data_in/years.csv' ) %>% 
+years_odds_tbl <- read_csv( 
+    'data_in/years.csv', 
+    col_types = col_types 
+) %>% 
     calcCumulative
-months_odds_tbl <- read_csv( 'data_in/months.csv' ) %>% 
+
+months_odds_tbl <- read_csv( 
+    'data_in/months.csv',
+    col_types = col_types
+) %>% 
     calcCumulative
-year_month_adj_odds_tbl <- read_csv( 'data_in/year_month_override.csv' ) %>%
+
+year_month_adj_odds_tbl <- read_csv( 
+    'data_in/year_month_override.csv',
+    col_types = col_types 
+) %>%
     calcCumulative
 
 # policy type information
-policy_type_odds_tbl <- read_csv( 'data_in/policy_type.csv' ) %>% 
+policy_type_odds_tbl <- read_csv( 
+    'data_in/policy_type.csv',
+    col_types = col_types
+) %>% 
     calcCumulative
-policy_type_2_odds_tbl <- read_csv( 'data_in/policy_type_level_2.csv' ) %>% 
+
+policy_type_2_odds_tbl <- read_csv( 
+    'data_in/policy_type_level_2.csv',
+    col_types = col_types
+) %>% 
     calcCumulative
-policy_type_3_odds_tbl <- read_csv( 'data_in/policy_type_level_3.csv' ) %>% 
+
+policy_type_3_odds_tbl <- read_csv( 
+    'data_in/policy_type_level_3.csv',
+    col_types = col_types
+) %>% 
     calcCumulative
 ```
 
