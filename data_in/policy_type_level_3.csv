@@ -1,9 +1,9 @@
-out_value,filter_1,filter_2,odds
-1,Aviation,General,1
-2,Aviation,Airports,0.2
-3,Aviation,Airports,0.8
-4,Aviation,War,1
-5,Employers Liability,Employers Liability,1
-6,Public Liability,Private Event,1
-6,Public Liability,Corporate Event,1
-6,Public Liability,Company PL,1
+out_value,code,filter_1,filter_2,odds
+1,AG,Aviation,General,1
+2,AA,Aviation,Airports,0.2
+3,AP,Aviation,Airports,0.8
+4,AW,Aviation,War,1
+5,EL,Employers Liability,Employers Liability,1
+6,PP,Public Liability,Private Event,1
+6,PE,Public Liability,Corporate Event,1
+6,PC,Public Liability,Company PL,1
