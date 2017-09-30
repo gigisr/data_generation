@@ -1,0 +1,13 @@
+out_value,filter_1,odds
+General,Aviation,0.4
+Airports,Aviation,0.5
+War,Aviation,0.1
+Employers Liability,Employers Liability,1
+Private Event,Public Liability,0.1
+Corporate Event,Public Liability,0.3
+Company PL,Public Liability,0.6
+Comprehensive,Car,0.3
+Third Party,Car,0.7
+Marine,Marine,1
+Home,House,0.8
+Contents,House,0.2
