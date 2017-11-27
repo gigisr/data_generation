@@ -1,0 +1,4 @@
+filter_1,min,max,type,mean,sd,df
+S,1,19,norm,10,3,
+M,20,199,norm,50,40,
+L,200,750,norm,550,140,
