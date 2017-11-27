@@ -1,6 +1,10 @@
 ###################### My ignored files
 
 *.html
+*.Rproj
+data_in/ukpostcodes.csv
+data_out/locations_tbl.csv
+utility.R
 
 #######################################
 
@@ -37,3 +41,4 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+.Rproj.user
