@@ -1,0 +1,338 @@
+---
+title: "Generic Data Generation"
+author: "Gigi"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+    toc_float: true
+    df_paged: paged
+---
+# Public liability
+
+The aim of this document is to help make data generation as easy as possible. I will be looking at public liability insurance only in this document.
+
+By using a set of generic functions hopefully it can be relatively easy to build up a complete data set from scratch.
+
+# Setup
+
+```{r setup-hidden, include=FALSE}
+rm( list = ls() )
+
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.height = 8,
+    fig.width = 11,
+    cache = FALSE
+)
+
+set.seed( 107 )
+```
+
+We use the packages:
+
+* `tidyverse` is used to manipulate and visualise data.
+* `lubridate` is used to convert and manipulate dates.
+
+```{r setup-library}
+library( tidyverse )
+library( lubridate )
+```
+
+There are also functions specific for the data generation, they are defined in an external file. 
+
+```{r setup-source}
+source( 'lib.R' )
+# source( 'utility.R' )
+```
+
+## Setting initial parameters
+
+```{r set-general-parameters}
+policy_count <- 1000
+incident_base_rate <- 0.5
+```
+
+## Reading in tables
+
+Set any required variables for reading in the tables.
+
+```{r set-tbl-options}
+# Define basic column data types
+col_types = cols(
+    out_value = col_character(),
+    odds      = col_double()
+)
+```
+
+### Stand alone tables
+
+Read in the locations table.
+
+```{r read-in-locations}
+postcode_tbl <- read_csv(
+    'data_out/locations_tbl.csv',
+    progress = FALSE,
+    col_types = cols(
+        postcode  = col_character(),
+        latitude  = col_double(),
+        longitude = col_double()
+    )
+)
+```
+
+Read in the table stipulating the maximum number of days in each month.
+
+```{r read-in-max-days}
+max_days_tbl <- read_csv(
+    'data_in/max_days_per_month.csv',
+    progress = FALSE,
+    col_types = col_types
+) %>% 
+    calcCumulative
+```
+
+### Policies tables
+
+```{r read-in-tbls-policies}
+policy_years_odds_tbl <- read_csv(
+    'data_in/policy_years.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+policy_months_odds_tbl <- read_csv(
+    'data_in/policy_months.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+policy_length_odds_tbl <- read_csv(
+    'data_in/policy_length.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+policy_size_rating_odds_tbl <- read_csv(
+    'data_in/policy_size_rating.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+policy_claim_limit_odds_tbl <- read_csv(
+    'data_in/claim_limit.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+policy_no_claims_odds_tbl <- read_csv(
+    'data_in/no_claims_no.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+size_rating_numeric_tbl <- read_csv(
+    'data_in/size_rating_numeric.csv',
+    col_types = cols(
+        filter_1 = col_character(),
+        min = col_double(),
+        max = col_double(),
+        type = col_character(),
+        mean = col_double(),
+        sd = col_double(),
+        df = col_integer()
+    )
+)
+
+claim_limit_tbl <- read_csv(
+    'data_in/claim_limit_extra.csv',
+    col_types = cols(
+        filter_1 = col_integer(),
+        premium_rate = col_double()
+    )
+)
+
+no_claims_tbl <- read_csv(
+    'data_in/no_claims_no_extra.csv',
+    col_types = cols(
+        filter_1      = col_integer(),
+        discount_rate = col_double()
+    )
+)
+```
+
+### Incidents tables
+
+```{r read-in-tbls-incidents}
+# date related tables
+years_odds_tbl <- read_csv( 
+    'data_in/years.csv', 
+    col_types = col_types 
+) %>% 
+    calcCumulative
+
+months_odds_tbl <- read_csv( 
+    'data_in/months.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+```
+
+# Building the tables
+
+## Policies table
+
+There are many features required for the policies table. 
+
+* ID.
+* Various rating factors such as the number of employees, turnover, number of years no claims.
+* Some charged premium.
+ 
+```{r generate-policies-tbl}  
+policies_tbl <- policy_count %>% 
+    # extract a postcode for each policy
+    sample_n( tbl = postcode_tbl, ., replace = TRUE ) %>% 
+    select( postcode ) %>% 
+    # add in the start year and month
+    mutate( 
+        start_year  = level1Values( policy_years_odds_tbl, n() ),
+        start_month = level1Values( policy_months_odds_tbl, n() )
+    ) %>% 
+    # add in the start_day, this relies on the start_month
+    group_by( start_month ) %>% 
+    mutate(
+        start_day = sample_n( 
+            tibble(
+                val = seq( 
+                    1,  
+                    filterTbl( max_days_tbl, start_month[1] ) %>% 
+                        as.numeric
+                )
+            ),
+            n(),
+            replace = TRUE
+        ) %>% 
+            .[[1]]
+    ) %>% 
+    ungroup %>% 
+    # create a single start date, then calc the end date based 
+    # on the policy length
+    mutate(
+        start_date    = paste( start_day, start_month, start_year, sep = '-' ) %>% 
+            dmy,
+        policy_length = level1Values( policy_length_odds_tbl, n() ) %>% 
+            as.numeric,
+        end_date      = start_date %m+% 
+            months( policy_length )
+    ) %>% 
+    # assign a size rating, I want these distributed roughly the same over
+    # each year
+    group_by( start_year ) %>% 
+    mutate(
+        size_rating = level1Values( policy_size_rating_odds_tbl, n() )
+    ) %>% 
+    # estimate an 'employee count' rating factor by the size rating
+    group_by( size_rating ) %>% 
+    mutate(
+        employee_count = numericValues(
+            n    = n(),
+            type = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'type'
+            ),
+            mean = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'mean'
+            ) %>% 
+                as.numeric,
+            minimum = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'min'
+            ) %>% 
+                as.numeric,
+            maximum = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'max'
+            ) %>% 
+                as.numeric,
+            sd = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'sd'
+            ) %>% 
+                as.numeric,
+            df = filterTbl( 
+                tbl          = size_rating_numeric_tbl,
+                filter_1_val = size_rating[1],
+                select_col   = 'df'
+            ) %>% 
+                as.numeric
+        )
+    ) %>% 
+    ungroup %>% 
+    mutate(
+        claim_limit = level1Values( policy_claim_limit_odds_tbl, n() ) %>% 
+            as.numeric,
+        no_claims_years = level1Values( policy_no_claims_odds_tbl, n() ) %>% 
+            as.numeric
+    ) %>% 
+    group_by( no_claims_years ) %>% 
+    mutate(
+        no_claims_discount = filterTbl( 
+            no_claims_tbl, 
+            no_claims_years[1],
+            'discount_rate'
+        ) %>% 
+            as.numeric
+    ) %>% 
+    group_by( claim_limit ) %>% 
+    mutate(
+        premium_rate = filterTbl( 
+            tbl          = claim_limit_tbl, 
+            filter_1_val = claim_limit[1],
+            select_col   = 'premium_rate'
+        ) %>% 
+            as.numeric
+    ) %>% 
+    ungroup %>% 
+    mutate(
+        premium   = (
+            premium_rate * claim_limit * 
+            log( employee_count ) * 
+            ( 1 + no_claims_discount )
+        ) %>% 
+            round( 2 ),
+        incidents = incident_base_rate * employee_count * 
+            numericValues( 
+                n(), 
+                'chisq', 
+                df = 0.1, 
+                minimum = 0.5,
+                maximum = 3.5
+            )
+    )
+```
+
+## Incidents table
+
+```{r generate-incidents-tbl}
+incidents_tbl <- policies_tbl[ 
+    rep( rownames( policies_tbl ) %>% as.integer, policies_tbl$incidents ), 
+] %>% 
+    # Remove intermediate columns
+    select( 
+        postcode, start_date, end_date, claim_limit
+    ) %>% 
+    mutate(
+        policy_days = start_date %--%
+            end_date %>% 
+            as.duration,
+        policy_days = policy_days / ddays( 1 ),
+        incident_date = ( start_date + ddays( runif( n(), 0, policy_days ) ) ) %>% 
+            date
+    )
+```
