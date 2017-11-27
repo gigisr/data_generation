@@ -43,6 +43,26 @@ calcCumulative <- function( df ) {
     
 }
 
+# filterTbl
+
+    # INPUTS
+    # tbl           - table to filter
+    # filter_1_val  - the value to filter the table on
+    # select_col    - column to get the value from as a string
+
+    # OUTPUT
+
+filterTbl <- function( tbl, filter_1_val, select_col = 'out_value' ) {
+    
+    out_value <- tbl %>% 
+        filter( filter_1 == filter_1_val ) %>% 
+        select_( select_col ) %>% 
+        .[[1]]
+    
+    return( out_value )
+    
+}
+
 # level1Values
 
     # INPUTS
@@ -63,9 +83,9 @@ level1Values <- function ( tbl, n ) {
         labels = tbl %>% select( out_value ) %>% .[[1]]
     ) %>% 
         as.character
-
+    
     return( output )
-  
+    
 }
 
 level1AdjValues <- function ( 
@@ -218,8 +238,9 @@ numericValues <- function (
     shape = 2, rate = 4,
     size = 1, prob = 0.5,
     mean = 0, sd = 1,
-    multiplier = 1, round = 0,
-    minimum = -Inf, maximum = Inf
+    multiplier = 1, 
+    minimum = -Inf, maximum = Inf,
+    addition = 0, round = 0
 ) {
     
     temp_func <- function ( x ) {
@@ -228,6 +249,7 @@ numericValues <- function (
             lapply( function( x ) prod( x, multiplier ) ) %>% 
             lapply( function( x ) max( x, minimum ) ) %>%
             lapply( function( x ) min( x, maximum ) ) %>% 
+            lapply( function( x ) return( x + addition ) ) %>% 
             unlist %>% 
             round( round )
         
