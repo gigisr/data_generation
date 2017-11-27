@@ -1,0 +1,57 @@
+---
+title: "Locations table"
+author: "Gigi"
+date: "`r Sys.Date()`"
+output: 
+    html_document:
+        toc: yes
+        toc_float: true
+        df_print: paged
+---
+
+# Setup
+
+```{r setup-hidden, include=FALSE}
+rm( list = ls() )
+
+knitr::opts_chunk$set(
+    echo = TRUE
+)
+```
+
+We use the packages:
+
+* `tidyverse` is used to manipulate and visualise data.
+
+```{r setup-library}
+library( tidyverse )
+```
+
+# Read in the data
+
+The postcode with latitude and longitude values was downloaded from <a href="https://www.freemaptools.com/download-uk-postcode-lat-lng.htm">Free Map Tools</a> as a csv on 07/10/2017.
+
+```{r read-in}
+location_tbl <- read_csv(
+    'data_in/ukpostcodes.csv',
+    progress = FALSE
+)
+
+glimpse( location_tbl )
+```
+
+# Manipulate the data
+
+Remove the id column to make the table smaller.
+
+```{r data-manip-remove-id}
+data_out_tbl <- location_tbl %>% 
+    select( -id )
+```
+
+# Write final table out
+
+```{r write-data-out}
+data_out_tbl %>% 
+    write_csv( 'data_out/locations_tbl.csv' )
+```
