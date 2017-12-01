@@ -20,13 +20,13 @@ By using a set of generic functions hopefully it can be relatively easy to build
 rm( list = ls() )
 
 knitr::opts_chunk$set(
-    echo = TRUE,
+    echo       = TRUE,
     fig.height = 8,
-    fig.width = 11,
-    cache = FALSE
+    fig.width  = 11,
+    cache      = FALSE
 )
 
-set.seed( 107 )
+set.seed( 185 )
 ```
 
 We use the packages:
@@ -43,7 +43,13 @@ There are also functions specific for the data generation, they are defined in a
 
 ```{r setup-source}
 source( 'lib.R' )
-# source( 'utility.R' )
+```
+
+```{r setup-to-remove, include=FALSE}
+function_list_to_remove <- c(
+    "calcCumulative", "filterTbl", "level1AdjValues", "level1Values", 
+    "level2Values", "level3Values", "numericValues"
+)
 ```
 
 ## Setting initial parameters
@@ -51,6 +57,12 @@ source( 'lib.R' )
 ```{r set-general-parameters}
 policy_count <- 1000
 incident_base_rate <- 0.5
+```
+
+```{r set-general-hidden, include=FALSE}
+general_list_to_remove <- c(
+    "policy_count", "incident_base_rate", "col_types"
+)
 ```
 
 ## Reading in tables
@@ -176,6 +188,18 @@ months_odds_tbl <- read_csv(
     col_types = col_types
 ) %>% 
     calcCumulative
+```
+
+```{r read-in-hidden, include=FALSE}
+# These are the odds tables that won't be required at the end
+table_list_to_remove <- c(
+    "postcode_tbl", "max_days_tbl", "policy_years_odds_tbl", 
+    "policy_months_odds_tbl", "policy_length_odds_tbl", 
+    "policy_size_rating_odds_tbl", "policy_claim_limit_odds_tbl",
+    "policy_no_claims_odds_tbl", "size_rating_numeric_tbl",
+    "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
+    "months_odds_tbl"
+)
 ```
 
 # Building the tables
@@ -335,4 +359,20 @@ incidents_tbl <- policies_tbl[
         incident_date = ( start_date + ddays( runif( n(), 0, policy_days ) ) ) %>% 
             date
     )
+```
+
+# Clean up
+
+After the generation remove all the tables, functions, and values that were used for the generation. Leaving only the generated tables as outputs.
+
+```{r clean-up}
+rm( list = table_list_to_remove )
+rm( list = function_list_to_remove )
+rm( list = general_list_to_remove )
+rm( list = c( 
+    "table_list_to_remove", 
+    "function_list_to_remove", 
+    "general_list_to_remove"
+    ) 
+)
 ```
