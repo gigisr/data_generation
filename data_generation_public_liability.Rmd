@@ -55,7 +55,7 @@ function_list_to_remove <- c(
 ## Setting initial parameters
 
 ```{r set-general-parameters}
-policy_count <- 1000
+policy_count <- 5000
 incident_base_rate <- 0.5
 ```
 
@@ -327,7 +327,7 @@ policies_tbl <- policy_count %>%
         premium   = (
             premium_rate * claim_limit * 
             log( employee_count ) * 
-            ( 1 + no_claims_discount )
+            ( 1 - no_claims_discount )
         ) %>% 
             round( 2 ),
         incidents = incident_base_rate * employee_count * 
@@ -337,7 +337,11 @@ policies_tbl <- policy_count %>%
                 df = 0.1, 
                 minimum = 0.5,
                 maximum = 3.5
-            )
+            ),
+        policy_id = paste0( 
+            "PL", start_year, size_rating, 
+            str_pad( string = row_number(), width = 7, pad = "0" )
+        )
     )
 ```
 
