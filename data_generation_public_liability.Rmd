@@ -188,6 +188,18 @@ months_odds_tbl <- read_csv(
     col_types = col_types
 ) %>% 
     calcCumulative
+
+incident_cat_1 <- read_csv(
+    'data_in/incident_category_1.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+incident_cat_1_adj <- read_csv(
+    'data_in/incident_category_1_adj.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
 ```
 
 ```{r read-in-hidden, include=FALSE}
@@ -337,7 +349,8 @@ policies_tbl <- policy_count %>%
                 df = 0.1, 
                 minimum = 0.5,
                 maximum = 3.5
-            ),
+            ) *
+            round( policy_length / 12, 0 ),
         policy_id = paste0( 
             "PL", start_year, size_rating, 
             str_pad( string = row_number(), width = 7, pad = "0" )
@@ -353,7 +366,7 @@ incidents_tbl <- policies_tbl[
 ] %>% 
     # Remove intermediate columns
     select( 
-        postcode, start_date, end_date, claim_limit
+        policy_id, postcode, start_date, end_date, start_year, claim_limit
     ) %>% 
     mutate(
         policy_days = start_date %--%
@@ -362,7 +375,18 @@ incidents_tbl <- policies_tbl[
         policy_days = policy_days / ddays( 1 ),
         incident_date = ( start_date + ddays( runif( n(), 0, policy_days ) ) ) %>% 
             date
-    )
+    ) %>% 
+    group_by( start_year ) %>% 
+    mutate(
+        description_level_1 = level1Values( tbl = incident_cat_1, n = n() ),
+        description_level_1 = level1AdjValues( 
+            org_values       = description_level_1, 
+            filter_values    = start_year, 
+            modification_tbl = incident_cat_1_adj, 
+            n                = n() 
+        )
+    ) %>% 
+    ungroup
 ```
 
 # Clean up
@@ -371,7 +395,7 @@ After the generation remove all the tables, functions, and values that were used
 
 ```{r clean-up}
 rm( list = table_list_to_remove )
-rm( list = function_list_to_remove )
+#rm( list = function_list_to_remove )
 rm( list = general_list_to_remove )
 rm( list = c( 
     "table_list_to_remove", 

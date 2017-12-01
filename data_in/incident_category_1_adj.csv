@@ -1,0 +1,16 @@
+out_value,filter_1,odds
+Minor,2012,0.6
+Mediocre,2012,0.17
+Major,2012,0.03
+Disaster,2012,0.01
+Unknown,2012,0.19
+Minor,2013,0.5
+Mediocre,2013,0.10
+Major,2013,0.05
+Disaster,2013,0.008
+Unknown,2013,0.342
+Minor,2014,0.25
+Mediocre,2014,0.1
+Major,2014,0.017
+Disaster,2014,0.003
+Unknown,2014,0.63
