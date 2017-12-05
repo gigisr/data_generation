@@ -1,0 +1,16 @@
+out_value,filter_1,odds
+Injury,Minor,0.4
+Property,Minor,0.6
+Death,Minor,0
+Injury,Mediocre,0.3
+Property,Mediocre,0.7
+Death,Mediocre,0
+Injury,Major,0.2
+Property,Major,0.79
+Death,Major,0.01
+Injury,Disaster,0.6
+Property,Disaster,0.39
+Death,Disaster,0.01
+Injury,Unknown,0
+Property,Unknown,0.5
+Death,Unknown,0
