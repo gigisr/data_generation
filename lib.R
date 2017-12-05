@@ -26,7 +26,8 @@ calcCumulative <- function( df ) {
     if ( level == 0 ) {
         
         output <- df %>% 
-            mutate( cumulative_odds = cumsum( odds ) )
+            mutate( cumulative_odds = cumsum( odds ) ) %>% 
+            filter( odds != 0 )
         
     } else {
         
@@ -35,7 +36,8 @@ calcCumulative <- function( df ) {
         output <- df %>% 
             group_by_( .dots = filter_names ) %>% 
             mutate( cumulative_odds = cumsum( odds ) ) %>% 
-            ungroup
+            ungroup %>% 
+            filter( odds != 0 )
         
     } 
     
