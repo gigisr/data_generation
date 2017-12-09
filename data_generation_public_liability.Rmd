@@ -106,7 +106,7 @@ Read in the table stipulating the maximum number of days in each month.
 
 ```{r read-in-max-days}
 max_days_tbl <- read_csv(
-    'data_in/max_days_per_month.csv',
+    'data_in/public_liability/max_days_per_month.csv',
     progress = FALSE,
     col_types = col_types
 ) %>% 
@@ -117,43 +117,43 @@ max_days_tbl <- read_csv(
 
 ```{r read-in-tbls-policies}
 policy_years_odds_tbl <- read_csv(
-    'data_in/policy_years.csv',
+    'data_in/public_liability/policy_years.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 policy_months_odds_tbl <- read_csv(
-    'data_in/policy_months.csv',
+    'data_in/public_liability/policy_months.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 policy_length_odds_tbl <- read_csv(
-    'data_in/policy_length.csv',
+    'data_in/public_liability/policy_length.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 policy_size_rating_odds_tbl <- read_csv(
-    'data_in/policy_size_rating.csv',
+    'data_in/public_liability/policy_size_rating.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 policy_claim_limit_odds_tbl <- read_csv(
-    'data_in/claim_limit.csv',
+    'data_in/public_liability/claim_limit.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 policy_no_claims_odds_tbl <- read_csv(
-    'data_in/no_claims_no.csv',
+    'data_in/public_liability/no_claims_no.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 size_rating_numeric_tbl <- read_csv(
-    'data_in/size_rating_numeric.csv',
+    'data_in/public_liability/size_rating_numeric.csv',
     col_types = cols(
         filter_1 = col_character(),
         min = col_double(),
@@ -166,7 +166,7 @@ size_rating_numeric_tbl <- read_csv(
 )
 
 claim_limit_tbl <- read_csv(
-    'data_in/claim_limit_extra.csv',
+    'data_in/public_liability/claim_limit_extra.csv',
     col_types = cols(
         filter_1 = col_integer(),
         premium_rate = col_double()
@@ -174,7 +174,7 @@ claim_limit_tbl <- read_csv(
 )
 
 no_claims_tbl <- read_csv(
-    'data_in/no_claims_no_extra.csv',
+    'data_in/public_liability/no_claims_no_extra.csv',
     col_types = cols(
         filter_1      = col_integer(),
         discount_rate = col_double()
@@ -187,37 +187,37 @@ no_claims_tbl <- read_csv(
 ```{r read-in-tbls-incidents}
 # date related tables
 years_odds_tbl <- read_csv( 
-    'data_in/years.csv', 
+    'data_in/public_liability/years.csv', 
     col_types = col_types 
 ) %>% 
     calcCumulative
 
 months_odds_tbl <- read_csv( 
-    'data_in/months.csv',
+    'data_in/public_liability/months.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 incident_cat_1 <- read_csv(
-    'data_in/incident_category_1.csv',
+    'data_in/public_liability/incident_category_1.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 incident_cat_1_adj <- read_csv(
-    'data_in/incident_category_1_adj.csv',
+    'data_in/public_liability/incident_category_1_adj.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 incident_cat_2 <- read_csv(
-    'data_in/incident_category_2.csv',
+    'data_in/public_liability/incident_category_2.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
 
 claim_flag <- read_csv(
-    'data_in/claim_flag.csv',
+    'data_in/public_liability/claim_flag.csv',
     col_types = col_types
 ) %>% 
     calcCumulative
