@@ -3,7 +3,7 @@
 *.html
 *.Rproj
 data_in/ukpostcodes.csv
-data_out/locations_tbl.csv
+data_out/*
 utility.R
 
 #######################################
