@@ -11,6 +11,6 @@ Death,Major,0.01
 Injury,Disaster,0.6
 Property,Disaster,0.39
 Death,Disaster,0.01
-Injury,Unknown,0
-Property,Unknown,0.5
+Injury,Unknown,0.3
+Property,Unknown,0.7
 Death,Unknown,0

@@ -3,10 +3,10 @@ title: "Generic Data Generation"
 author: "Gigi"
 date: "`r Sys.Date()`"
 output: 
-  html_document: 
-    toc: yes
-    toc_float: true
-    df_paged: paged
+    html_document: 
+        toc: yes
+        toc_float: true
+        df_paged: paged
 ---
 # Public liability
 
@@ -33,10 +33,12 @@ We use the packages:
 
 * `tidyverse` is used to manipulate and visualise data.
 * `lubridate` is used to convert and manipulate dates.
+* `stringr` is used to manipulate strings, it is part of the tidyverse.
 
 ```{r setup-library}
 library( tidyverse )
 library( lubridate )
+library( stringr )
 ```
 
 There are also functions specific for the data generation, they are defined in an external file. 
@@ -59,9 +61,16 @@ policy_count <- 5000
 incident_base_rate <- 0.5
 ```
 
+```{r set-file-out-names}
+policies_out_name  <- 'data_out/policies.csv'
+incidents_out_name <- 'data_out/incidents.csv'
+claims_out_name    <- 'data_out/claims.csv'
+```
+
 ```{r set-general-hidden, include=FALSE}
 general_list_to_remove <- c(
-    "policy_count", "incident_base_rate", "col_types"
+    "policy_count", "incident_base_rate", "col_types", 
+    "policies_out_name", "incidents_out_name", "claims_out_name"
 )
 ```
 
@@ -200,6 +209,18 @@ incident_cat_1_adj <- read_csv(
     col_types = col_types
 ) %>% 
     calcCumulative
+
+incident_cat_2 <- read_csv(
+    'data_in/incident_category_2.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+claim_flag <- read_csv(
+    'data_in/claim_flag.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
 ```
 
 ```{r read-in-hidden, include=FALSE}
@@ -210,7 +231,8 @@ table_list_to_remove <- c(
     "policy_size_rating_odds_tbl", "policy_claim_limit_odds_tbl",
     "policy_no_claims_odds_tbl", "size_rating_numeric_tbl",
     "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
-    "months_odds_tbl"
+    "months_odds_tbl", "incident_cat_1", "incident_cat_2",
+    "incident_cat_1_adj", "claim_flag"
 )
 ```
 
@@ -381,12 +403,47 @@ incidents_tbl <- policies_tbl[
         description_level_1 = level1Values( tbl = incident_cat_1, n = n() ),
         description_level_1 = level1AdjValues( 
             org_values       = description_level_1, 
-            filter_values    = start_year, 
+            filter_value     = start_year, 
             modification_tbl = incident_cat_1_adj, 
             n                = n() 
         )
     ) %>% 
+    group_by( description_level_1 ) %>% 
+    mutate(
+        description_level_2 = level2Values(
+            odds_tbl     = incident_cat_2,
+            filter_value = description_level_1,
+            n            = n()
+        )
+    ) %>% 
+    ungroup %>% 
+    mutate(
+        incident_year = year( incident_date )
+    ) %>% 
+    group_by( incident_year ) %>% 
+    mutate(
+        claim_flag = level2Values(
+            odds_tbl     = claim_flag,
+            filter_value = incident_year,
+            n            = n()
+        ) %>% 
+            as.logical
+    ) %>% 
     ungroup
+```
+
+## Claims table
+
+```{r generate-claim-tbl}
+claims_tbl <- incidents_tbl %>% 
+    filter( claim_flag )
+```
+
+# Write files out
+
+```{r write-out}
+write_csv( policies_tbl, policies_out_name )
+write_csv( incidents_tbl, incidents_out_name )
 ```
 
 # Clean up
