@@ -185,7 +185,6 @@ no_claims_tbl <- read_csv(
 ### Incidents tables
 
 ```{r read-in-tbls-incidents}
-# date related tables
 years_odds_tbl <- read_csv( 
     'data_in/public_liability/years.csv', 
     col_types = col_types 
@@ -223,6 +222,15 @@ claim_flag <- read_csv(
     calcCumulative
 ```
 
+### Claims tables
+
+```{r read-in-tbls-claims}
+claim_reported_days <- read_csv(
+    'data_in/public_liability/claim_reported_day_adj.csv',
+    col_types = col_types
+)
+```
+
 ```{r read-in-hidden, include=FALSE}
 # These are the odds tables that won't be required at the end
 table_list_to_remove <- c(
@@ -232,7 +240,7 @@ table_list_to_remove <- c(
     "policy_no_claims_odds_tbl", "size_rating_numeric_tbl",
     "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
     "months_odds_tbl", "incident_cat_1", "incident_cat_2",
-    "incident_cat_1_adj", "claim_flag"
+    "incident_cat_1_adj", "claim_flag", "claim_reported_days"
 )
 ```
 
@@ -296,36 +304,36 @@ policies_tbl <- policy_count %>%
             n    = n(),
             type = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'type'
             ),
             mean = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'mean'
             ) %>% 
                 as.numeric,
             minimum = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'min'
             ) %>% 
                 as.numeric,
             maximum = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'max'
             ) %>% 
                 as.numeric,
             sd = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'sd'
             ) %>% 
                 as.numeric,
             df = filterTbl( 
                 tbl          = size_rating_numeric_tbl,
-                filter_1_val = size_rating[1],
+                size_rating[1],
                 select_col   = 'df'
             ) %>% 
                 as.numeric
@@ -333,7 +341,7 @@ policies_tbl <- policy_count %>%
     ) %>% 
     ungroup %>% 
     mutate(
-        claim_limit = level1Values( policy_claim_limit_odds_tbl, n() ) %>% 
+        claim_limit     = level1Values( policy_claim_limit_odds_tbl, n() ) %>% 
             as.numeric,
         no_claims_years = level1Values( policy_no_claims_odds_tbl, n() ) %>% 
             as.numeric
@@ -343,15 +351,15 @@ policies_tbl <- policy_count %>%
         no_claims_discount = filterTbl( 
             no_claims_tbl, 
             no_claims_years[1],
-            'discount_rate'
+            select_col = 'discount_rate'
         ) %>% 
             as.numeric
     ) %>% 
     group_by( claim_limit ) %>% 
     mutate(
         premium_rate = filterTbl( 
-            tbl          = claim_limit_tbl, 
-            filter_1_val = claim_limit[1],
+            claim_limit_tbl, 
+            claim_limit[1],
             select_col   = 'premium_rate'
         ) %>% 
             as.numeric
@@ -436,7 +444,46 @@ incidents_tbl <- policies_tbl[
 
 ```{r generate-claim-tbl}
 claims_tbl <- incidents_tbl %>% 
-    filter( claim_flag )
+    filter( claim_flag ) %>% 
+    select( -claim_flag ) %>% 
+    group_by( description_level_1, description_level_2 ) %>% 
+    mutate(
+        claim_reported_days = numericValues( 
+            n(),
+            type = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "type", default = "norm"
+            ),
+            df = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "df", default = 4, convert = "num"
+            ),
+            multiplier = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "multiplier", default = 1, convert = "num"
+            ),
+            addition = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "addition", default = 0, convert = "num"
+            ),
+            min = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "min", default = -Inf, convert = "num"
+            ),
+            max = filterTbl(
+                claim_reported_days,
+                description_level_2[1], description_level_1[1],
+                select_col = "max", default = Inf, convert = "num"
+            )
+        ),
+        claim_reported_date = incident_date + ddays( claim_reported_days )
+    ) %>% 
+    ungroup
 ```
 
 # Write files out
@@ -444,6 +491,7 @@ claims_tbl <- incidents_tbl %>%
 ```{r write-out}
 write_csv( policies_tbl, policies_out_name )
 write_csv( incidents_tbl, incidents_out_name )
+write_csv( claims_tbl, claims_out_name )
 ```
 
 # Clean up
@@ -452,7 +500,7 @@ After the generation remove all the tables, functions, and values that were used
 
 ```{r clean-up}
 rm( list = table_list_to_remove )
-#rm( list = function_list_to_remove )
+rm( list = function_list_to_remove )
 rm( list = general_list_to_remove )
 rm( list = c( 
     "table_list_to_remove", 
