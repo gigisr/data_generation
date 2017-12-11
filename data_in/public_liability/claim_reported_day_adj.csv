@@ -1,0 +1,16 @@
+filter_1,filter_2,type,df,multiplier,addition,min,max
+Injury,Minor,chisq,0.9,5,0,0,1
+Property,Minor,chisq,4,5,0,0,1
+Death,Minor,unif,4,1,0,0,3
+Injury,Mediocre,chisq,0.9,5,0,0,1
+Property,Mediocre,chisq,4,5,0,0,1
+Death,Mediocre,unif,4,1,0,0,3
+Injury,Major,chisq,2,5,1,0,1
+Property,Major,chisq,2,5,1,0,1
+Death,Major,unif,4,1,0,0,2
+Injury,Disaster,chisq,1,5,1,0,1
+Property,Disaster,chisq,1,5,1,0,1
+Death,Disaster,unif,4,1,0,0,2
+Injury,Unknown,chisq,3,4,0,0,1
+Property,Unknown,chisq,3,4,0,0,1
+Death,Unknown,unif,4,1,0,0,10
