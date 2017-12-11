@@ -54,14 +54,60 @@ calcCumulative <- function( df ) {
 
     # OUTPUT
 
-filterTbl <- function( tbl, filter_1_val, select_col = 'out_value' ) {
+filterTbl <- function( 
+    tbl, ..., select_col = "out_value", default = "0", convert = "none"
+) {
     
-    out_value <- tbl %>% 
-        filter( filter_1 == filter_1_val ) %>% 
-        select_( select_col ) %>% 
-        .[[1]]
+    filter_values <- list( ... )
     
-    return( out_value )
+    level <- tbl %>%
+        select( starts_with( 'filter' ) ) %>% 
+        dim %>%
+        .[2]
+    
+    level_check <- filter_values %>% 
+        length
+    
+    if ( level != level_check ) {
+        val <- paste(
+            "There is a different number of filter columns and",
+            "filter values provided."
+        )
+        stop( val )
+    }
+    
+    tmp <- tbl
+    
+    for ( i in 1:level ) {
+        filter_string <- paste0(
+            "filter_", i, " == "
+        )
+        if ( class( filter_values[[i]][[1]] ) == "character" ) {
+            filter_string <- paste0(
+                filter_string, '"', filter_values[[i]], '"'
+            )
+        } else {
+            filter_string <- paste0(
+                filter_string, filter_values[[i]]
+            )
+        }
+        tmp <- tmp %>% 
+            filter_( filter_string )
+    }
+    
+    output <- tmp %>% 
+        select_( select_col )
+    
+    if ( dim( output )[1] == 0 ) {
+        output <- default
+    }
+    
+    if ( convert == "num" ) {
+        output <- output %>% 
+            as.numeric
+    }
+    
+    return( output[1] )
     
 }
 
