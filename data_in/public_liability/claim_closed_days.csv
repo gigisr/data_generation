@@ -1,0 +1,4 @@
+filter_1,type,df,addition,shape,rate
+Injury,chisq,20,2,0,0
+Property,chisq,40,0,0,0
+Death,gamma,4,30,5,0.01
