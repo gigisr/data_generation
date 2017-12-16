@@ -59,6 +59,7 @@ function_list_to_remove <- c(
 ```{r set-general-parameters}
 policy_count <- 5000
 incident_base_rate <- 0.5
+date_recieved <- dmy( '01-06-2016' )
 ```
 
 ```{r set-file-out-names}
@@ -227,6 +228,11 @@ claim_flag <- read_csv(
 ```{r read-in-tbls-claims}
 claim_reported_days <- read_csv(
     'data_in/public_liability/claim_reported_day_adj.csv',
+    col_types = col_types
+)
+
+claim_closed_days <- read_csv(
+    'data_in/public_liability/claim_closed_days.csv',
     col_types = col_types
 )
 ```
@@ -449,7 +455,7 @@ claims_tbl <- incidents_tbl %>%
     group_by( description_level_1, description_level_2 ) %>% 
     mutate(
         claim_reported_days = numericValues( 
-            n(),
+            n = n(),
             type = filterTbl(
                 claim_reported_days,
                 description_level_2[1], description_level_1[1],
@@ -483,7 +489,51 @@ claims_tbl <- incidents_tbl %>%
         ),
         claim_reported_date = incident_date + ddays( claim_reported_days )
     ) %>% 
-    ungroup
+    group_by( description_level_2 ) %>% 
+    mutate(
+        claim_closed_days = numericValues(
+            n = n(),
+            type = filterTbl(
+                claim_closed_days,
+                description_level_2[1],
+                select_col = 'type', default = 'norm'
+            ),
+            df = filterTbl(
+                claim_closed_days,
+                description_level_2[1],
+                select_col = 'df', default = 4, convert = 'num'
+            ),
+            addition = filterTbl(
+                claim_closed_days,
+                description_level_2[1],
+                select_col = 'addition', default = 0, convert = 'num'
+            ),
+            shape = filterTbl(
+                claim_closed_days,
+                description_level_2[1],
+                select_col = 'shape', default = 0, convert = 'num'
+            ),
+            rate = filterTbl(
+                claim_closed_days,
+                description_level_2[1],
+                select_col = 'rate', default = 0, convert = 'num'
+            )
+        ),
+        claim_closed_date = claim_reported_date + ddays( claim_closed_days )
+    ) %>% 
+    ungroup %>% 
+    mutate(
+        claim_reported_date = if_else(
+            claim_reported_date %--% date_recieved <= 0,
+            suppressMessages( dmy( NA ) ),
+            claim_reported_date
+        ),
+        claim_closed_date = if_else(
+            claim_closed_date %--% date_recieved <= 0,
+            suppressMessages( dmy( NA ) ),
+            claim_closed_date
+        )
+    )
 ```
 
 # Write files out
