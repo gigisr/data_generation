@@ -1,1 +1,7 @@
 filter_1,out_value,odds
+Property,Under investigation,0.2
+Property,Open,0.8
+Injury,Under investigation,0.6
+Injury,Open,0.4
+Death,Under investigation,0.9
+Death,Open,0.1

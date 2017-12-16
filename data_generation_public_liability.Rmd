@@ -71,7 +71,8 @@ claims_out_name    <- 'data_out/claims.csv'
 ```{r set-general-hidden, include=FALSE}
 general_list_to_remove <- c(
     "policy_count", "incident_base_rate", "col_types", 
-    "policies_out_name", "incidents_out_name", "claims_out_name"
+    "policies_out_name", "incidents_out_name", "claims_out_name",
+    "date_recieved"
 )
 ```
 
@@ -235,6 +236,12 @@ claim_closed_days <- read_csv(
     'data_in/public_liability/claim_closed_days.csv',
     col_types = col_types
 )
+
+claim_status_tbl <- read_csv(
+    'data_in/public_liability/claim_status.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
 ```
 
 ```{r read-in-hidden, include=FALSE}
@@ -246,7 +253,8 @@ table_list_to_remove <- c(
     "policy_no_claims_odds_tbl", "size_rating_numeric_tbl",
     "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
     "months_odds_tbl", "incident_cat_1", "incident_cat_2",
-    "incident_cat_1_adj", "claim_flag", "claim_reported_days"
+    "incident_cat_1_adj", "claim_flag", "claim_reported_days",
+    "claim_closed_days"
 )
 ```
 
@@ -533,7 +541,21 @@ claims_tbl <- incidents_tbl %>%
             dmy( NA ),
             claim_closed_date
         )
-    )
+    ) %>% 
+    group_by( description_level_2 ) %>% 
+    mutate(
+        claim_status = ifelse(
+            is.na( claim_closed_date %--% date_recieved ),
+            level2Values(
+                claim_status_tbl,
+                description_level_2,
+                n(),
+                default = "Open"
+            ),
+            "Closed"
+        )
+    ) %>% 
+    ungroup
 ```
 
 # Write files out
