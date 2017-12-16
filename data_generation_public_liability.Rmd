@@ -264,7 +264,6 @@ There are many features required for the policies table.
 policies_tbl <- policy_count %>% 
     # extract a postcode for each policy
     sample_n( tbl = postcode_tbl, ., replace = TRUE ) %>% 
-    select( postcode ) %>% 
     # add in the start year and month
     mutate( 
         start_year  = level1Values( policy_years_odds_tbl, n() ),
@@ -402,7 +401,8 @@ incidents_tbl <- policies_tbl[
 ] %>% 
     # Remove intermediate columns
     select( 
-        policy_id, postcode, start_date, end_date, start_year, claim_limit
+        policy_id, postcode, start_date, end_date, start_year, claim_limit,
+        latitude, longitude
     ) %>% 
     mutate(
         policy_days = start_date %--%
@@ -525,12 +525,12 @@ claims_tbl <- incidents_tbl %>%
     mutate(
         claim_reported_date = if_else(
             claim_reported_date %--% date_recieved <= 0,
-            suppressMessages( dmy( NA ) ),
+            dmy( NA ),
             claim_reported_date
         ),
         claim_closed_date = if_else(
             claim_closed_date %--% date_recieved <= 0,
-            suppressMessages( dmy( NA ) ),
+            dmy( NA ),
             claim_closed_date
         )
     )
