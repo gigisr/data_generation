@@ -96,7 +96,7 @@ filterTbl <- function(
     }
     
     output <- tmp %>% 
-        select_( select_col )
+        select_( .dots = select_col )
     
     if ( dim( output )[1] == 0 ) {
         output <- default
@@ -107,7 +107,7 @@ filterTbl <- function(
             as.numeric
     }
     
-    return( output[1] )
+    return( output )
     
 }
 
