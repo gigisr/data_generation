@@ -48,11 +48,12 @@ calcCumulative <- function( df ) {
 # filterTbl
 
     # INPUTS
-    # tbl           - table to filter
-    # filter_1_val  - the value to filter the table on
-    # select_col    - column to get the value from as a string
+    #   tbl           - table to filter
+    #   filter_1_val  - the value to filter the table on
+    #   select_col    - column to get the value from as a string
 
     # OUTPUT
+    #   output - the filtered table
 
 filterTbl <- function( 
     tbl, ..., select_col = "out_value", default = "0", convert = "none"
@@ -62,8 +63,7 @@ filterTbl <- function(
     
     level <- tbl %>%
         select( starts_with( 'filter' ) ) %>% 
-        dim %>%
-        .[2]
+        ncol
     
     level_check <- filter_values %>% 
         length
@@ -111,30 +111,86 @@ filterTbl <- function(
     
 }
 
-# level1Values
+# levelValues
 
     # INPUTS
-    #   tbl - this is a table containing the desired output values as well
-    #         as the probabilies
-    #   n   - this is the size of output deisred
-    
+    #   tbl       - table of odds
+    #   n         - numer of values to be outputed
+    #   ...       - the filter values for the odds table if applicable
+    #   default   - a default value for if no values are found in the table
+    #   modification_tbl - if there is a table of modification values to 
+    #       'overrule' the main table
+    #       NEEDS TESTING
+    #   convert   - if the output is required to be numeric this argument
+    #       takes the value 'num'
+
     # OUTPUT
-    #   output - this will be a vector
+    #   output - a vector of values generated from the tbl and 
+    #       modification_tbl inputs
 
-level1Values <- function ( tbl, n ) {
-  
+levelValues <- function ( 
+    tbl, n, ...,
+    default = "default", modification_tbl = data.frame(), convert = "none"
+) {
+    
+    level <- tbl %>% 
+        select( starts_with( "filter" ) ) %>% 
+        ncol
+    
+    if ( level > 0 ) {
+        tbl <- filterTbl(
+            tbl, ..., select_col = c( "out_value", "cumulative_odds" )
+        )
+    }
+    
+    level <- modification_tbl %>% 
+        select( starts_with( "filter" ) ) %>% 
+        ncol
+    
+    if ( level > 0 ) {
+        modification_tbl <- filterTbl(
+            modification_tbl, ..., 
+            select_col = c( "out_value", "cumulative_odds" )
+        )
+    }
+    
     random_values <- runif( n )
-
+    
+    if ( nrow( modification_tbl ) > 0 ) {
+        
+        tbl <- modification_tbl
+        
+    }
+    
+    if ( nrow( tbl ) == 0 ) {
+        
+        output <- replicate( n, default )
+        
+        return( output )
+        
+    }
+    
     output <- cut(
         x      = random_values,
         breaks = c( 0, tbl %>% select( cumulative_odds ) %>% .[[1]] ),
         labels = tbl %>% select( out_value ) %>% .[[1]]
-    ) %>% 
+    ) %>%
         as.character
+    
+    if ( convert == "num" ) {
+        output <- output %>% 
+            as.numeric
+    }
     
     return( output )
     
 }
+
+# level1AdjValues
+
+    # INPUTS
+
+    # OUTPUT
 
 level1AdjValues <- function ( 
     org_values, filter_value, modification_tbl, n
@@ -164,100 +220,6 @@ level1AdjValues <- function (
     
 }
 
-# level2Values
-
-    # INPUTS
-    #   tbl - this is a table containing the desired output values as well
-    #         as the probabilities
-    #   filter_value - this is the value that the table will be filtered 
-    #         by, the column that will be filtered is filter_1
-    #   n - the number of values to create
-    #   default - is an argument with a default value
-    
-    # OUTPUT
-    #   output - outputs a vector of values
-
-level2Values <- function ( 
-    odds_tbl, filter_value, n, 
-    default = "default", modification_tbl = data.frame() 
-) {
-  
-    random_values <- runif( n )
-    
-    tbl <- modification_tbl %>%
-        filter( filter_1 == filter_value[1] )
-
-    if ( nrow( tbl ) == 0 ) {
-        
-        tbl <- odds_tbl %>% 
-            filter( filter_1 == filter_value[1] )
-        
-    }
-  
-    if ( nrow( tbl ) == 0 ) {
-        
-        output <- replicate( n, default )
-        
-        return( output )
-        
-    }
-  
-    output <- cut(
-        x      = random_values,
-        breaks = c( 0, tbl %>% select( cumulative_odds ) %>% .[[1]] ),
-        labels = tbl %>% select( out_value ) %>% .[[1]]
-    ) %>% 
-        as.character
-  
-    return( output )
-  
-}
-
-# level3Values
-
-    # INPUTS
-    #   tbl - this is a table containing the desired output values as well
-    #         as the probabilities
-    #   filter_value_1 - this is the value that the table will be filtered 
-    #         by, the column that will be filtered is filter_1
-    #   filter_value_2 - this is the value that the table will be filtered
-    #         by, the column that will be filtered is filter_2
-    #   n - the number of values to create
-    
-    # OUTPUT
-    #   output - outputs a vector of values
-
-level3Values <- function ( 
-        tbl, filter_value_1, filter_value_2, n, 
-        default = "default", modification_tbl = data.frame()
-    ) {
-  
-    random_values <- runif( n )
-  
-    tbl <- tbl %>% 
-        filter( 
-          filter_1 == filter_value_1[1],
-          filter_2 == filter_value_2[1]
-        )
-  
-    if ( nrow( tbl ) == 0 ) {
-    
-        output <- replicate( n, default )
-        
-        return( output )
-    
-    }
-    
-    output <- cut(
-        x      = random_values,
-        breaks = c( 0, tbl %>% select( cumulative_odds ) %>% .[[1]] ),
-        labels = tbl %>% select( out_value ) %>% .[[1]]
-    ) %>% 
-        as.character
-    
-    return( output )
-  
-}
 
 # numericValues
 
@@ -277,7 +239,7 @@ level3Values <- function (
     #   maximum     - a maximum value to cap the numbers at
     
     # OUTPUT
-    #   . - outputs a vector of values
+    #   . - outputs a vector of values based on the 'type' input
 
 numericValues <- function ( 
     n, type, 
