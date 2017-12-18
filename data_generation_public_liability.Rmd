@@ -49,8 +49,8 @@ source( 'lib.R' )
 
 ```{r setup-to-remove, include=FALSE}
 function_list_to_remove <- c(
-    "calcCumulative", "filterTbl", "level1AdjValues", "level1Values", 
-    "level2Values", "level3Values", "numericValues"
+    "calcCumulative", "filterTbl", "level1AdjValues", "levelValues", 
+    "numericValues"
 )
 ```
 
@@ -274,8 +274,8 @@ policies_tbl <- policy_count %>%
     sample_n( tbl = postcode_tbl, ., replace = TRUE ) %>% 
     # add in the start year and month
     mutate( 
-        start_year  = level1Values( policy_years_odds_tbl, n() ),
-        start_month = level1Values( policy_months_odds_tbl, n() )
+        start_year  = levelValues( policy_years_odds_tbl, n() ),
+        start_month = levelValues( policy_months_odds_tbl, n() )
     ) %>% 
     # add in the start_day, this relies on the start_month
     group_by( start_month ) %>% 
@@ -299,7 +299,7 @@ policies_tbl <- policy_count %>%
     mutate(
         start_date    = paste( start_day, start_month, start_year, sep = '-' ) %>% 
             dmy,
-        policy_length = level1Values( policy_length_odds_tbl, n() ) %>% 
+        policy_length = levelValues( policy_length_odds_tbl, n() ) %>% 
             as.numeric,
         end_date      = start_date %m+% 
             months( policy_length )
@@ -308,7 +308,7 @@ policies_tbl <- policy_count %>%
     # each year
     group_by( start_year ) %>% 
     mutate(
-        size_rating = level1Values( policy_size_rating_odds_tbl, n() )
+        size_rating = levelValues( policy_size_rating_odds_tbl, n() )
     ) %>% 
     # estimate an 'employee count' rating factor by the size rating
     group_by( size_rating ) %>% 
@@ -354,9 +354,9 @@ policies_tbl <- policy_count %>%
     ) %>% 
     ungroup %>% 
     mutate(
-        claim_limit     = level1Values( policy_claim_limit_odds_tbl, n() ) %>% 
+        claim_limit     = levelValues( policy_claim_limit_odds_tbl, n() ) %>% 
             as.numeric,
-        no_claims_years = level1Values( policy_no_claims_odds_tbl, n() ) %>% 
+        no_claims_years = levelValues( policy_no_claims_odds_tbl, n() ) %>% 
             as.numeric
     ) %>% 
     group_by( no_claims_years ) %>% 
@@ -422,19 +422,19 @@ incidents_tbl <- policies_tbl[
     ) %>% 
     group_by( start_year ) %>% 
     mutate(
-        description_level_1 = level1Values( tbl = incident_cat_1, n = n() ),
-        description_level_1 = level1AdjValues( 
-            org_values       = description_level_1, 
-            filter_value     = start_year, 
-            modification_tbl = incident_cat_1_adj, 
-            n                = n() 
+        description_level_1 = levelValues( tbl = incident_cat_1, n = n() ),
+        description_level_1 = level1AdjValues(
+            org_values       = description_level_1,
+            filter_value     = start_year,
+            modification_tbl = incident_cat_1_adj,
+            n                = n()
         )
     ) %>% 
     group_by( description_level_1 ) %>% 
     mutate(
-        description_level_2 = level2Values(
-            odds_tbl     = incident_cat_2,
-            filter_value = description_level_1,
+        description_level_2 = levelValues(
+            tbl     = incident_cat_2,
+            description_level_1[1],
             n            = n()
         )
     ) %>% 
@@ -444,9 +444,9 @@ incidents_tbl <- policies_tbl[
     ) %>% 
     group_by( incident_year ) %>% 
     mutate(
-        claim_flag = level2Values(
-            odds_tbl     = claim_flag,
-            filter_value = incident_year,
+        claim_flag = levelValues(
+            tbl     = claim_flag,
+            incident_year,
             n            = n()
         ) %>% 
             as.logical
@@ -546,10 +546,10 @@ claims_tbl <- incidents_tbl %>%
     mutate(
         claim_status = ifelse(
             is.na( claim_closed_date %--% date_recieved ),
-            level2Values(
+            levelValues(
                 claim_status_tbl,
-                description_level_2,
                 n(),
+                description_level_2,
                 default = "Open"
             ),
             "Closed"
@@ -574,10 +574,10 @@ After the generation remove all the tables, functions, and values that were used
 rm( list = table_list_to_remove )
 rm( list = function_list_to_remove )
 rm( list = general_list_to_remove )
-rm( list = c( 
-    "table_list_to_remove", 
-    "function_list_to_remove", 
+rm( list = c(
+    "table_list_to_remove",
+    "function_list_to_remove",
     "general_list_to_remove"
-    ) 
+    )
 )
 ```
