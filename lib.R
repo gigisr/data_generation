@@ -130,8 +130,13 @@ filterTbl <- function(
 
 levelValues <- function ( 
     tbl, n, ...,
-    default = "default", modification_tbl = data.frame(), convert = "none"
+    default = "default", modification_tbl = data.frame(), convert = "none",
+    select_col = c( "out_value", "cumulative_odds" )
 ) {
+    
+    if ( length( select_col ) != 2 ) {
+        stop( "Wrong number of columns specified in select_col." )
+    }
     
     level <- tbl %>% 
         select( starts_with( "filter" ) ) %>% 
@@ -139,7 +144,7 @@ levelValues <- function (
     
     if ( level > 0 ) {
         tbl <- filterTbl(
-            tbl, ..., select_col = c( "out_value", "cumulative_odds" )
+            tbl, ..., select_col = select_col
         )
     }
     
@@ -149,8 +154,7 @@ levelValues <- function (
     
     if ( level > 0 ) {
         modification_tbl <- filterTbl(
-            modification_tbl, ..., 
-            select_col = c( "out_value", "cumulative_odds" )
+            modification_tbl, ..., select_col = select_col
         )
     }
     
@@ -164,6 +168,10 @@ levelValues <- function (
     
     if ( nrow( tbl ) == 0 ) {
         
+        if ( length( default ) > 1 ) {
+            return( default )
+        }
+        
         output <- replicate( n, default )
         
         return( output )
@@ -172,8 +180,8 @@ levelValues <- function (
     
     output <- cut(
         x      = random_values,
-        breaks = c( 0, tbl %>% select( cumulative_odds ) %>% .[[1]] ),
-        labels = tbl %>% select( out_value ) %>% .[[1]]
+        breaks = c( 0, tbl %>% select_( select_col[2] ) %>% .[[1]] ),
+        labels = tbl %>% select( select_col[1] ) %>% .[[1]]
     ) %>%
         as.character
     
@@ -226,7 +234,7 @@ level1AdjValues <- function (
     # INPUTS
     #   n           - the number of values to be generated
     #   type        - the type of generating distribution, takes values:
-    #       "chisq", "unif", "gamma", "binom", "norm"
+    #       "chisq", "unif", "gamma", "binom", "norm", "static"
     #   df          - the degrees of freedom for the chisq distribution
     #   min, max    - the lower and upper limits of the distribution
     #   shape, rate - the parameters of the gamma distribution
@@ -248,6 +256,7 @@ numericValues <- function (
     shape = 2, rate = 4,
     size = 1, prob = 0.5,
     mean = 0, sd = 1,
+    value = 0,
     multiplier = 1, 
     minimum = -Inf, maximum = Inf,
     addition = 0, round = 0
@@ -285,6 +294,10 @@ numericValues <- function (
     
     if ( type == "norm" ) {
         return( temp_func( rnorm( n, mean, sd ) ) )
+    }
+    
+    if ( type == "static" ) {
+        return( temp_func( value ) )
     }
     
 }
