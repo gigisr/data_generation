@@ -1,0 +1,8 @@
+filter_1,type,value,mean,sd,minimum,maximum
+2010,static,1,1,1,0,1
+2011,static,1,1,1,0,1
+2012,static,1,1,1,0,1
+2013,static,1,1,1,0,1
+2014,static,1,1,1,0,1
+2015,norm,0,0.6,0.2,0.1,1
+2016,norm,0,0.1,0.2,0,1
