@@ -242,6 +242,17 @@ claim_status_tbl <- read_csv(
     col_types = col_types
 ) %>% 
     calcCumulative
+
+claim_incurred <- read_csv(
+    'data_in/public_liability/claim_incurred.csv',
+    col_types = col_types
+) %>% 
+    calcCumulative
+
+claim_paid <- read_csv(
+    'data_in/public_liability/claim_paid.csv',
+    col_types = col_types
+)
 ```
 
 ```{r read-in-hidden, include=FALSE}
@@ -254,7 +265,7 @@ table_list_to_remove <- c(
     "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
     "months_odds_tbl", "incident_cat_1", "incident_cat_2",
     "incident_cat_1_adj", "claim_flag", "claim_reported_days",
-    "claim_closed_days"
+    "claim_closed_days", "claim_status_tbl"
 )
 ```
 
@@ -555,7 +566,90 @@ claims_tbl <- incidents_tbl %>%
             "Closed"
         )
     ) %>% 
-    ungroup
+    group_by( incident_year ) %>% 
+    mutate(
+        incurred_amt_tmp = levelValues(
+            claim_incurred,
+            n(),
+            incident_year,
+            default = "1"
+        )
+    ) %>% 
+    group_by( incident_year, incurred_amt_tmp ) %>% 
+    mutate(
+        incurred_amt = numericValues(
+            n(),
+            type = filterTbl(
+                claim_incurred %>% rename( filter_2 = out_value ),
+                incident_year, incurred_amt_tmp,
+                select_col = "type"
+            ),
+            df = filterTbl(
+                claim_incurred %>% rename( filter_2 = out_value ),
+                incident_year, incurred_amt_tmp,
+                select_col = "df", convert = "num"
+            ),
+            value = filterTbl(
+                claim_incurred %>% rename( filter_2 = out_value ),
+                incident_year, incurred_amt_tmp,
+                select_col = "value", convert = "num"
+            ),
+            multiplier = filterTbl(
+                claim_incurred %>% rename( filter_2 = out_value ),
+                incident_year, incurred_amt_tmp,
+                select_col = "multiplier", convert = "num"
+            ),
+            round = 2
+        )
+    ) %>% 
+    group_by( incident_year ) %>% 
+    mutate(
+        claim_paid_tmp = numericValues(
+            n(),
+            type = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "type"
+            ),
+            value = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "value",
+                convert = "num"
+            ),
+            mean = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "mean",
+                convert = "num"
+            ),
+            sd = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "sd",
+                convert = "num"
+            ),
+            minimum = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "minimum",
+                convert = "num"
+            ),
+            maximum = filterTbl(
+                claim_paid,
+                incident_year,
+                select_col = "maximum",
+                convert = "num"
+            ),
+            round = 4
+        )
+    ) %>% 
+    ungroup %>% 
+    mutate(
+        claim_paid = round( incurred_amt * claim_paid_tmp, 2 ),
+        claim_reserved = incurred_amt - claim_paid
+    ) %>%
+    select( -incurred_amt_tmp, -claim_paid_tmp )
 ```
 
 # Write files out
