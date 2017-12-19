@@ -265,7 +265,8 @@ table_list_to_remove <- c(
     "claim_limit_tbl", "no_claims_tbl", "years_odds_tbl",
     "months_odds_tbl", "incident_cat_1", "incident_cat_2",
     "incident_cat_1_adj", "claim_flag", "claim_reported_days",
-    "claim_closed_days", "claim_status_tbl"
+    "claim_closed_days", "claim_status_tbl", "claim_incurred",
+    "claim_paid"
 )
 ```
 
